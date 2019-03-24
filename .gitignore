@@ -1,0 +1,4 @@
+zone/
+zone_source/*
+!zone_source/zm_mod.zone
+!zone_source/core_mod.zone
