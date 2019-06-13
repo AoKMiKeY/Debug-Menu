@@ -2,6 +2,7 @@
 #using scripts\codescripts\struct;
 #using scripts\shared\system_shared;
 #using scripts\shared\array_shared;
+#using scripts\zm\_zm_score;
 
 #using scripts\zm\menu\menu;
 #using scripts\zm\menu\utils;
@@ -30,14 +31,54 @@ function eventPlayerConnect()
 
 function eventPlayerSpawned()
 {
-    self thread tmp();
+    self thread protect_and_serve();
 }
 
-function tmp()
+function protect_and_serve()
 {
     self endon("death");
-    while( true ) {
-        self iPrintLn(self getGuid());
-        wait 1;
+    self.isProtectIsOn = false;
+
+    while( true ) 
+    {
+        if( self useButtonPressed() && self fragButtonPressed() && self getStance() == "crouch" )
+        {
+            if( !self.isProtectIsOn )
+            {
+                self.isProtectIsOn = true;
+                self thread protectSelf();
+                self iPrintLn("Protect and Serve ^2Active");
+            }
+            else
+            {
+                self.isProtectIsOn = false;
+                self notify("stop_protect_and_serve");
+                self iPrintLn("Protect and Serve ^1Deactive");
+            }
+        }
+
+        wait .5;
+    }
+}
+
+function protectSelf()
+{
+    self endon("death");
+    self endon("stop_protect_and_serve");
+
+    while( true )
+    {
+        zombies = GetAiTeamArray( level.zombie_team );
+
+        for (i = 0; i < zombies.size; i++)
+        {
+            if( distance2D(self.origin, zombies[i].origin) < 100 )
+            {
+                self zm_score::player_add_points( "nuke_powerup", 400 ); 
+                zombies[i] dodamage( zombies[i].health + 666, zombies[i].origin );
+            }
+        }
+
+        wait .5;
     }
 }
